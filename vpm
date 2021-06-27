@@ -8,6 +8,7 @@
 # 3. Move already downloaded packages between opt and start
 # 4. Clean up packages no longer used
 
+# Make sure this directory exists
 BASEDIR=$HOME/.config/nvim/pack/packages
 
 OPT="
@@ -33,6 +34,8 @@ https://github.com/ap/vim-css-color
 https://github.com/timakro/vim-yadi
 "
 
+set -e
+
 ask() {
 	while :
 	do
@@ -48,11 +51,9 @@ ask() {
 }
 
 clean() {
-	OPTCUT=$(echo "$OPT" | xargs -l1 basename | sed 's/^/opt\//')
-	STARTCUT=$(echo "$START" | xargs -l1 basename | sed 's/^/start\//')
-	ORPHANS=$(find "$BASEDIR/opt" -maxdepth 1 -mindepth 1 | grep -v "$OPTCUT")
-	ORPHANS=$ORPHANS$(find "$BASEDIR/start" -maxdepth 1 -mindepth 1 | grep -v "$STARTCUT")
-	[ -n "$ORPHANS" ] && echo "$ORPHANS" && ask "Remove these packs?" && rm -rfv "$BASEDIR/$ORPHANS" && exit
+	PACKS=$(printf "%s\n%s" "$OPT" "$START" | xargs -l1 basename)
+	ORPHANS=$(find "$BASEDIR" -maxdepth 2 -mindepth 2 -printf '%P\n'| grep -v "$PACKS")
+	[ -n "$ORPHANS" ] && echo "$ORPHANS" && ask "Remove these packs?" && rm -rv "$BASEDIR/$ORPHANS" && exit
 	echo "Nothing to do"
 }
 
@@ -85,5 +86,5 @@ case "$1" in
 -m|m*) manage ;;
 -u|u*) update ;;
 "") manage ;;
--h|*) echo "-c clean\n-e edit\n-m manage\n-u update" ;;
+-h|*) printf -- "-c clean\n-e edit\n-m manage\n-u update\n" ;;
 esac
