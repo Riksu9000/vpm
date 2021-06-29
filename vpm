@@ -1,12 +1,6 @@
 #!/bin/sh
 
-# The actually minimalistic and simple vim package manager
-
-# Basic vim package manager that can do 4 things.
-# 1. Download new packages
-# 2. Update all packages
-# 3. Move already downloaded packages between opt and start
-# 4. Clean up packages no longer used
+# https://github.com/riksu9000/vpm
 
 # Make sure this directory exists
 BASEDIR=$HOME/.config/nvim/pack/packages
@@ -25,7 +19,6 @@ https://github.com/junegunn/goyo.vim
 "
 
 START="
-https://github.com/jiangmiao/auto-pairs
 https://github.com/tpope/vim-commentary
 https://github.com/tpope/vim-fugitive
 https://github.com/wellle/context.vim
@@ -52,12 +45,28 @@ ask() {
 
 clean() {
 	PACKS=$(printf "%s\n%s" "$OPT" "$START" | xargs -l1 basename)
-	ORPHANS=$(find "$BASEDIR" -maxdepth 2 -mindepth 2 -printf '%P\n'| grep -v "$PACKS")
-	[ -n "$ORPHANS" ] && echo "$ORPHANS" && ask "Remove these packs?" && rm -rv "$BASEDIR/$ORPHANS" && exit
-	echo "Nothing to do"
+	ORPHANS=$(find "$BASEDIR" -maxdepth 2 -mindepth 2 -printf '%P\n'| grep -v "$PACKS" || true)
+	if [ -n "$ORPHANS" ] && echo "$ORPHANS" && ask "Remove these packs?"
+	then
+		for pack in $ORPHANS
+		do
+			rm -rf "$BASEDIR/$pack"
+		done
+		echo "Done"
+	else
+		echo "Nothing to do"
+	fi
 }
 
 manage() {
+	# Move orphan packages to opt
+	PACKS=$(echo "$START" | xargs -l1 basename)
+	ORPHANS=$(find "$BASEDIR/start" -maxdepth 1 -mindepth 1 -printf '%P\n'| grep -v "$PACKS" || true)
+	for pack in $ORPHANS
+	do
+		mv -v "$BASEDIR/start/$pack" "$BASEDIR/opt/"
+	done
+
 	for url in $OPT
 	do
 		BN=$(basename "$url")

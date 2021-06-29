@@ -1,6 +1,6 @@
 # vim package manager
 
-Vim package manager can do 4 things.
+vpm can do 4 things.
 
 1. Download new packages
 2. Update all packages
